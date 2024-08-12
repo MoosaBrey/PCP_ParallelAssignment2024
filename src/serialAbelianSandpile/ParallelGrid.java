@@ -29,8 +29,8 @@ public class ParallelGrid{
 
 	public ParallelGrid(int[][] newParallelGrid){
 		this(newParallelGrid.length,newParallelGrid[0].length);
-		for(int i=1; i<rows; i++){
-			for(int j=1; j<columns; j++){
+		for(int i=0; i<rows; i++){
+			for(int j=0; j<columns; j++){
 				this.parallelGrid[i][j] = newParallelGrid[i-1][j-1];
 			}
 		}
