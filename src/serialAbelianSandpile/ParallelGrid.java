@@ -9,17 +9,18 @@ import java.util.concurrent.ForkJoinPool;
 import java.lang.Boolean;
 import java.util.concurrent.RecursiveTask;
 
+//This class is for the grid for the Abelian Sandpile cellular automaton
 public class ParallelGrid{
 	private int rows, columns;
 	private int [][] parallelGrid;
 	private int [][] updateGrid;
 
 	public ParallelGrid(int w, int h){
-		rows = w+2;
-		columns = h+2;
+		rows = w+2;//for the "sink" border
+		columns = h+2;//for the "sink" border
 		parallelGrid = new int[this.rows][this.columns];
 		updateGrid = new int[this.rows][this.columns];
-
+		/* grid  initialization */
 		for(int i=0; i<this.rows;i++){
 			for(int j=0; j<this.columns;j++){
 				parallelGrid[i][j] = 0;
@@ -28,7 +29,8 @@ public class ParallelGrid{
 	}
 
 	public ParallelGrid(int[][] newParallelGrid){
-		this(newParallelGrid.length,newParallelGrid[0].length);
+		this(newParallelGrid.length,newParallelGrid[0].length); //call constructor above
+		//don't copy over sink border
 		for(int i=1; i<rows-1; i++){
 			for(int j=1; j<columns-1; j++){
 				this.parallelGrid[i][j] = newParallelGrid[i-1][j-1];
@@ -37,7 +39,8 @@ public class ParallelGrid{
 	}
 
 	public ParallelGrid(ParallelGrid copyParallelGrid){
-		this(copyParallelGrid.rows, copyParallelGrid.columns);
+		this(copyParallelGrid.rows, copyParallelGrid.columns);//call constructor above
+		/* grid  initialization */
 		for(int i=0; i<rows; i++){
 			for(int j=0; j<columns; j++){
 				this.parallelGrid[i][j]=copyParallelGrid.get(i,j);
@@ -46,11 +49,11 @@ public class ParallelGrid{
 	}
 
 	public int getRows(){
-		return rows-2;
+		return rows-2;//less the sink
 	}
 
 	public int getColumns(){
-		return columns-2;
+		return columns-2;//less the sink
 	}
 
 	int get(int i, int j) {
@@ -75,22 +78,13 @@ public class ParallelGrid{
 		}
 	}
 
-	Boolean update(){
-		ParallelGridUpdateTask task = new ParallelGridUpdateTask(parallelGrid, 1, rows-1);
-		boolean change = ForkJoinPool.commonPool().invoke(task);
-		if(change){
-			nextTimeStep();
-		}
-		return change;
-	}
-
 	public class ParallelGridUpdateTask extends RecursiveTask<Boolean>{
 		private int startRow;
 		private int endRow;
 		private int [][] parallelGrid;
 		private final int CUTOFF = (rows*columns)/Runtime.getRuntime().availableProcessors();
 
-		public ParallelGridUpdateTask(int [][] parallelGrid, int startRow, int endRow){
+		public ParallelGridUpdateTask(int[][] parallelGrid, int startRow, int endRow){
 			this.startRow = startRow;
 			this.endRow = endRow;
 			this.parallelGrid = parallelGrid;
@@ -128,6 +122,15 @@ public class ParallelGrid{
 		}
 
 
+	}
+
+	boolean update(){
+		ParallelGridUpdateTask task = new ParallelGridUpdateTask(parallelGrid, 1, rows-1);
+		boolean change = ForkJoinPool.commonPool().invoke(task);
+		if(change){
+			nextTimeStep();
+		}
+		return change;
 	}
 
 	//display the grid in text format
