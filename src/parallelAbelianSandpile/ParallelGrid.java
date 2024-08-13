@@ -12,8 +12,8 @@ import java.util.concurrent.RecursiveTask;
 //This class is for the grid for the Abelian Sandpile cellular automaton
 public class ParallelGrid{
 	private int rows, columns;
-	private int [][] parallelGrid;
-	private int [][] updateGrid;
+	private int [][] parallelGrid;//grid
+	private int [][] updateGrid;//grid for next time step
 
 	public ParallelGrid(int w, int h){
 		rows = w+2;//for the "sink" border
@@ -78,23 +78,25 @@ public class ParallelGrid{
 			}
 		}
 	}
-
-	public class ParallelGridUpdateTask extends RecursiveTask<Boolean>{
-		private int start;
-		private int end;
+	// Inner class that handles the creation of new threads for update method.
+	public class ParallelGridUpdate extends RecursiveTask<Boolean>{
+		private int start;//starting row
+		private int end;//end row
 		private int [][] parallelGrid;
-		private final int CUTOFF = (rows*columns)/Runtime.getRuntime().availableProcessors();
+		private final int CUTOFF = (rows*columns)/Runtime.getRuntime().availableProcessors();//sequential cutoff variable for computer
 
-		public ParallelGridUpdateTask(int[][] parallelGrid, int start, int end){
+		public ParallelGridUpdate(int[][] parallelGrid, int start, int end){
 			this.start = start;
 			this.end = end;
 			this.parallelGrid = parallelGrid;
 		}
 
+		//compute method to assign a grid to threads
 		@Override
 		protected Boolean compute(){
 			if((end-start)*columns <= CUTOFF){
 				boolean change = false;
+				//do not update border
 				for(int i=start; i<end; i++){
 					for(int j=1; j<columns-1; j++){
 						updateGrid[i][j] = (parallelGrid[i][j] % 4) + 
@@ -106,28 +108,29 @@ public class ParallelGrid{
 							change=true; 
 						}
 					}
-				}
+				}//end nested for loop
 				return change;
 			}
 			else{
-				int mid = (start + end)/2;
-
-				ParallelGridUpdateTask top = new ParallelGridUpdateTask(parallelGrid, start, mid);
-				ParallelGridUpdateTask bottom = new ParallelGridUpdateTask(parallelGrid, mid, end);
+				int mid = (start + end)/2;//middle row
+				//threads split graph to top and bottom sections of graph
+				ParallelGridUpdate top = new ParallelGridUpdate(parallelGrid, start, mid);//assigning of top section of graph to a thread
+				ParallelGridUpdate bottom = new ParallelGridUpdate(parallelGrid, mid, end);//assignm=ing of bottom section of graph to a thread
 
 				top.fork();
 				boolean resultA = bottom.compute();
 				boolean resultB = top.join();
-				return resultA||resultB;
+				return resultA||resultB;//return of combined results after completion
 			}
 		}
 
 
 	}
 
+	//key method to calculate the next update grid
 	boolean update(){
-		ParallelGridUpdateTask task = new ParallelGridUpdateTask(parallelGrid, 1, rows-1);
-		boolean change = ForkJoinPool.commonPool().invoke(task);
+		ParallelGridUpdate update = new ParallelGridUpdate(parallelGrid, 1, rows-1);
+		boolean change = ForkJoinPool.commonPool().invoke(update);
 		if(change){
 			nextTimeStep();
 		}
