@@ -1,5 +1,5 @@
 //Copyright M.M.Kuttel 2024 CSC2002S, UCT
-package ParallelAbelianSandpile;
+package parallelAbelianSandpile;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
