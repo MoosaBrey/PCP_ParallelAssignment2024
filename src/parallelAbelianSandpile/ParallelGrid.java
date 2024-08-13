@@ -1,4 +1,4 @@
-package serialAbelianSandpile;
+package parallelAbelianSandpile;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -80,22 +80,22 @@ public class ParallelGrid{
 	}
 
 	public class ParallelGridUpdateTask extends RecursiveTask<Boolean>{
-		private int startRow;
-		private int endRow;
+		private int start;
+		private int end;
 		private int [][] parallelGrid;
 		private final int CUTOFF = (rows*columns)/Runtime.getRuntime().availableProcessors();
 
-		public ParallelGridUpdateTask(int[][] parallelGrid, int startRow, int endRow){
-			this.startRow = startRow;
-			this.endRow = endRow;
+		public ParallelGridUpdateTask(int[][] parallelGrid, int start, int end){
+			this.start = start;
+			this.end = end;
 			this.parallelGrid = parallelGrid;
 		}
 
 		@Override
 		protected Boolean compute(){
-			if((endRow-startRow)*columns <= CUTOFF){
+			if((end-start)*columns <= CUTOFF){
 				boolean change = false;
-				for(int i=startRow; i<endRow; i++){
+				for(int i=start; i<end; i++){
 					for(int j=1; j<columns-1; j++){
 						updateGrid[i][j] = (parallelGrid[i][j] % 4) + 
 										(parallelGrid[i-1][j] / 4) +
@@ -110,10 +110,10 @@ public class ParallelGrid{
 				return change;
 			}
 			else{
-				int midRow = (startRow + endRow)/2;
+				int mid = (start + end)/2;
 
-				ParallelGridUpdateTask top = new ParallelGridUpdateTask(parallelGrid, startRow, midRow);
-				ParallelGridUpdateTask bottom = new ParallelGridUpdateTask(parallelGrid, midRow, endRow);
+				ParallelGridUpdateTask top = new ParallelGridUpdateTask(parallelGrid, start, mid);
+				ParallelGridUpdateTask bottom = new ParallelGridUpdateTask(parallelGrid, mid, end);
 
 				top.fork();
 				boolean resultA = bottom.compute();
