@@ -24,6 +24,7 @@ public class ParallelGrid{
 		for(int i=0; i<this.rows;i++){
 			for(int j=0; j<this.columns;j++){
 				parallelGrid[i][j] = 0;
+				updateGrid[i][j] = 0;
 			}
 		}
 	}
@@ -92,7 +93,7 @@ public class ParallelGrid{
 
 		@Override
 		protected Boolean compute(){
-			if((endRow-startRow) <= CUTOFF){
+			if((endRow-startRow)*columns <= CUTOFF){
 				boolean change = false;
 				for(int i=startRow; i<endRow; i++){
 					for(int j=1; j<columns-1; j++){
